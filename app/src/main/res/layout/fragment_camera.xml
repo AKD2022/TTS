@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/teal"
+    tools:context=".CameraFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <Button
+        android:id="@+id/openCamera"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:layout_margin="20dp"
+        android:layout_gravity="bottom"
+        android:text="Take Picture"
+        android:textSize="25sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Your image will be displayed here"
+        android:textSize="18sp"
+        android:layout_gravity="center"/>
+
+    <ImageView
+        android:id="@+id/showImageCamera"
+        android:layout_width="295dp"
+        android:layout_height="390dp"
+        android:layout_gravity="center"
+        android:foreground="@drawable/imageviewforeground" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Take a picture of your text if you have not already. Here you will only take a picture, if you already have one, skip this page"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:padding="30dp"
+        android:gravity="center_horizontal"/>
+
+
+
+</FrameLayout>

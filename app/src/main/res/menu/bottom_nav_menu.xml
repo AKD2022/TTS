@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/camera"
+        android:icon="@drawable/baseline_camera_alt_24"
+        android:title="Camera" />
+    <item
+        android:id="@+id/translate"
+        android:icon="@drawable/baseline_translate_24"
+        android:title="Translate" />
+    <item
+        android:id="@+id/audio"
+        android:icon="@drawable/baseline_audiotrack_24"
+        android:title="Audio" />
+</menu>

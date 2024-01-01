@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/purple"
+    android:padding="20dp"
+    tools:context=".TranslateFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+
+    <Button
+        android:id="@+id/openGallery"
+        android:layout_width="326dp"
+        android:layout_height="74dp"
+        android:layout_gravity="top"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginRight="30dp"
+        android:padding="15dp"
+        android:text="Open Gallery"
+        android:textSize="20dp"
+        app:icon="@drawable/baseline_image_24" />
+
+    <ImageView
+        android:id="@+id/showImageTranslate"
+        android:layout_width="match_parent"
+        android:layout_height="366dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="48dp"
+        android:layout_marginLeft="8dp"
+        android:adjustViewBounds="false"
+        android:src="@drawable/baseline_image_24" />
+
+    <Button
+        android:id="@+id/translate"
+        android:layout_width="wrap_content"
+        android:layout_height="61dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="200dp"
+        android:layout_marginBottom="125dp"
+        android:text="Translate"
+        app:icon="@drawable/baseline_translate_24" />
+
+    <Button
+        android:id="@+id/getText"
+        android:layout_width="161dp"
+        android:layout_height="61dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="30dp"
+        android:layout_marginBottom="125dp"
+        android:text="Recognize Text"
+        app:icon="@drawable/baseline_document_scanner_24" />
+
+    <Button
+        android:layout_width="305dp"
+        android:layout_height="64dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="30dp"
+        android:layout_marginBottom="60dp"
+        android:text="Generate Audio"
+        app:icon="@drawable/baseline_audiotrack_24" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/help"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:adjustViewBounds="true"
+        android:outlineProvider="none"
+        android:padding="20dp"
+        android:src="@drawable/baseline_question_mark_24" />
+
+
+</FrameLayout>
