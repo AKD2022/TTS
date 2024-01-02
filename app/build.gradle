@@ -57,6 +57,9 @@ dependencies {
     // Translation
     implementation 'com.google.mlkit:translate:17.0.2'
 
+    // Language Identification
+    implementation 'com.google.mlkit:language-id:17.0.4'
+
 
 
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

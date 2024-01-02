@@ -2,9 +2,11 @@ package com.example.tts;
 
 import static android.content.ContentValues.TAG;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -13,15 +15,18 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
 
@@ -30,8 +35,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.mlkit.common.model.DownloadConditions;
-import com.google.mlkit.nl.translate.TranslateLanguage;
+import com.google.mlkit.nl.languageid.LanguageIdentification;
+import com.google.mlkit.nl.languageid.LanguageIdentifier;
 import com.google.mlkit.nl.translate.Translation;
 import com.google.mlkit.nl.translate.Translator;
 import com.google.mlkit.nl.translate.TranslatorOptions;
@@ -43,6 +48,8 @@ import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions;
 import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+
+import java.util.Locale;
 
 
 /**
@@ -69,6 +76,10 @@ public class TranslateFragment extends Fragment {
     private TextRecognizer textRecognizerKorean;
 
     private String recognizedText;
+    private String languageCode;
+    private String translateTo;
+
+    private String translatedText;
 
     private Button openGalleryBtn;
     private Button getTextBtn;
@@ -145,7 +156,7 @@ public class TranslateFragment extends Fragment {
         });
 
         translateBtn.setOnClickListener(view -> {
-            translateText();
+            showLocaleDialog();
         });
 
         textRecognizerLatin = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
@@ -196,7 +207,6 @@ public class TranslateFragment extends Fragment {
 
     // Text Recognition
     private void recognizedTextFromImage() {
-
         try {
             InputImage inputImageLatin = InputImage.fromFilePath(getContext(), imageUri);
 
@@ -303,17 +313,202 @@ public class TranslateFragment extends Fragment {
         catch (Exception e) {
             Toast.makeText(getContext(), "Could not get text from image", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     public void translateText() {
+        if (recognizedText == null || recognizedText.isEmpty() || languageCode == null || languageCode.isEmpty()) {
+            Toast.makeText(getContext(), "Please recognize text and identify language first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         TranslatorOptions options = new TranslatorOptions.Builder()
-                .setTargetLanguage("es")
-                .setSourceLanguage("en")
+                .setTargetLanguage(translateTo)
+                .setSourceLanguage(languageCode)
                 .build();
         Translator translator = Translation.getClient(options);
         String sourceText = recognizedText;
-        Task<String> result
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setTitle("Downloading Translation Model....");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        translator.downloadModelIfNeeded()
+                .addOnSuccessListener(unused -> {
+                    progressDialog.dismiss();
+                    // Start translation only after model download completes
+                    translateWithModelAvailable(translator, sourceText);
+                })
+                .addOnFailureListener(e -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(getContext(), "Failed to download translation model", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Translation model download failed: " + e.getMessage());
+                });
     }
 
+    private void translateWithModelAvailable(Translator translator, String sourceText) {
+        Task<String> result = translator.translate(sourceText)
+                .addOnSuccessListener(s -> {
+                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "If the model is already installed, text cannot be translated", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Translation failed: " + e.getMessage());
+                });
+    }
+
+
+    public void identifyLanguage() {
+        LanguageIdentifier languageIdentifier = LanguageIdentification.getClient();
+        languageIdentifier.identifyLanguage(recognizedText)
+                .addOnSuccessListener(new OnSuccessListener<String>() {
+                    @Override
+                    public void onSuccess(String language) {
+                        if (language.equals("und")) {
+                            Toast.makeText(getContext(), "Can't Identify Language", Toast.LENGTH_SHORT).show();
+                        } else {
+                            languageCode = language;
+                            translateText();
+                        }
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getContext(), "Exception" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showLocaleDialog() {
+        PopupMenu popupMenu = new PopupMenu(getContext(), translateBtn);
+
+        popupMenu.getMenu().add(Menu.NONE, 1, 1, "Afrikaans");
+        popupMenu.getMenu().add(Menu.NONE, 2, 2, "Arabic");
+        popupMenu.getMenu().add(Menu.NONE, 3, 3, "Belarusian");
+        popupMenu.getMenu().add(Menu.NONE, 4, 4, "Bulgarian");
+        popupMenu.getMenu().add(Menu.NONE, 5, 5, "Bengali");
+        popupMenu.getMenu().add(Menu.NONE, 6, 6, "Catalan");
+        popupMenu.getMenu().add(Menu.NONE, 7, 7, "Czech");
+        popupMenu.getMenu().add(Menu.NONE, 8, 8, "Welsh");
+        popupMenu.getMenu().add(Menu.NONE, 9, 9, "Danish");
+        popupMenu.getMenu().add(Menu.NONE, 10, 10, "German");
+        popupMenu.getMenu().add(Menu.NONE, 11, 11, "Greek");
+        popupMenu.getMenu().add(Menu.NONE, 12, 12, "English");
+        popupMenu.getMenu().add(Menu.NONE, 13, 13, "Esperanto");
+        popupMenu.getMenu().add(Menu.NONE, 14, 14, "Spanish");
+        popupMenu.getMenu().add(Menu.NONE, 15, 15, "Estonian");
+        popupMenu.getMenu().add(Menu.NONE, 16, 16, "Persian");
+        popupMenu.getMenu().add(Menu.NONE, 17, 17, "Finnish");
+        popupMenu.getMenu().add(Menu.NONE, 18, 18, "French");
+        popupMenu.getMenu().add(Menu.NONE, 19, 19, "Irish");
+        popupMenu.getMenu().add(Menu.NONE, 20, 20, "Galician");
+        popupMenu.getMenu().add(Menu.NONE, 21, 21, "Gujarati");
+        popupMenu.getMenu().add(Menu.NONE, 22, 22, "Hebrew");
+        popupMenu.getMenu().add(Menu.NONE, 23, 23, "Hindi");
+        popupMenu.getMenu().add(Menu.NONE, 24, 24, "Croatian");
+        popupMenu.getMenu().add(Menu.NONE, 25, 25, "Haitian");
+        popupMenu.getMenu().add(Menu.NONE, 26, 26, "Hungarian");
+        popupMenu.getMenu().add(Menu.NONE, 27, 27, "Indonesian");
+        popupMenu.getMenu().add(Menu.NONE, 28, 28, "Icelandic");
+        popupMenu.getMenu().add(Menu.NONE, 29, 29, "Italian");
+        popupMenu.getMenu().add(Menu.NONE, 30, 30, "Japanese");
+        popupMenu.getMenu().add(Menu.NONE, 31, 31, "Georgian");
+        popupMenu.getMenu().add(Menu.NONE, 32, 32, "Kannada");
+        popupMenu.getMenu().add(Menu.NONE, 33, 33, "Korean");
+        popupMenu.getMenu().add(Menu.NONE, 34, 34, "Lithuanian");
+        popupMenu.getMenu().add(Menu.NONE, 35, 35, "Latvian");
+        popupMenu.getMenu().add(Menu.NONE, 36, 36, "Macedonian");
+        popupMenu.getMenu().add(Menu.NONE, 37, 37, "Marathi");
+        popupMenu.getMenu().add(Menu.NONE, 38, 38, "Malay");
+        popupMenu.getMenu().add(Menu.NONE, 39, 39, "Maltese");
+        popupMenu.getMenu().add(Menu.NONE, 40, 40, "Dutch");
+        popupMenu.getMenu().add(Menu.NONE, 41, 41, "Norwegian");
+        popupMenu.getMenu().add(Menu.NONE, 42, 42, "Polish");
+        popupMenu.getMenu().add(Menu.NONE, 43, 43, "Portuguese");
+        popupMenu.getMenu().add(Menu.NONE, 44, 44, "Romanian");
+        popupMenu.getMenu().add(Menu.NONE, 45, 45, "Russian");
+        popupMenu.getMenu().add(Menu.NONE, 46, 46, "Slovak");
+        popupMenu.getMenu().add(Menu.NONE, 47, 47, "Slovenian");
+        popupMenu.getMenu().add(Menu.NONE, 48, 48, "Albanian");
+        popupMenu.getMenu().add(Menu.NONE, 49, 49, "Swedish");
+        popupMenu.getMenu().add(Menu.NONE, 50, 50, "Swahili");
+        popupMenu.getMenu().add(Menu.NONE, 51, 51, "Tamil");
+        popupMenu.getMenu().add(Menu.NONE, 52, 52, "Telugu");
+        popupMenu.getMenu().add(Menu.NONE, 53, 53, "Thai");
+        popupMenu.getMenu().add(Menu.NONE, 54, 54, "Tagalog");
+        popupMenu.getMenu().add(Menu.NONE, 55, 55, "Turkish");
+        popupMenu.getMenu().add(Menu.NONE, 56, 56, "Ukrainian");
+        popupMenu.getMenu().add(Menu.NONE, 57, 57, "Urdu");
+        popupMenu.getMenu().add(Menu.NONE, 58, 58, "Vietnamese");
+        popupMenu.getMenu().add(Menu.NONE, 59, 59, "Chinese");
+
+        popupMenu.show();
+
+        popupMenu.setOnMenuItemClickListener(menuItem -> {
+            int id = menuItem.getItemId();
+
+            switch (id) {
+                case 1: translateTo = "af"; identifyLanguage(); break; // Afrikaans
+                case 2: translateTo = "ar"; identifyLanguage(); break; // Arabic
+                case 3: translateTo = "be"; identifyLanguage(); break; // Belarusian
+                case 4: translateTo = "bg"; identifyLanguage(); break; // Bulgarian
+                case 5: translateTo = "bn"; identifyLanguage(); break; // Bengali
+                case 6: translateTo = "ca"; identifyLanguage(); break; // Catalan
+                case 7: translateTo = "cs"; identifyLanguage(); break; // Czech
+                case 8: translateTo = "cy"; identifyLanguage(); break; // Welsh
+                case 9: translateTo = "da"; identifyLanguage(); break; // Danish
+                case 10: translateTo = "de"; identifyLanguage(); break; // German
+                case 11: translateTo = "el"; identifyLanguage(); break; // Greek
+                case 12: translateTo = "en"; identifyLanguage(); break; // English
+                case 13: translateTo = "eo"; identifyLanguage(); break; // Esperanto
+                case 14: translateTo = "es"; identifyLanguage(); break; // Spanish
+                case 15: translateTo = "et"; identifyLanguage(); break; // Estonian
+                case 16: translateTo = "fa"; identifyLanguage(); break; // Persian
+                case 17: translateTo = "fi"; identifyLanguage(); break; // Finnish
+                case 18: translateTo = "fr"; identifyLanguage(); break; // French
+                case 19: translateTo = "ga"; identifyLanguage(); break; // Irish
+                case 20: translateTo = "gl"; identifyLanguage(); break; // Galician
+                case 21: translateTo = "gu"; identifyLanguage(); break; // Gujarati
+                case 22: translateTo = "he"; identifyLanguage(); break; // Hebrew
+                case 23: translateTo = "hi"; identifyLanguage(); break; // Hindi
+                case 24: translateTo = "hr"; identifyLanguage(); break; // Croatian
+                case 25: translateTo = "ht"; identifyLanguage(); break; // Haitian
+                case 26: translateTo = "hu"; identifyLanguage(); break; // Hungarian
+                case 27: translateTo = "id"; identifyLanguage(); break; // Indonesian
+                case 28: translateTo = "is"; identifyLanguage(); break; // Icelandic
+                case 29: translateTo = "it"; identifyLanguage(); break; // Italian
+                case 30: translateTo = "ja"; identifyLanguage(); break; // Japanese
+                case 31: translateTo = "ka"; identifyLanguage(); break; // Georgian
+                case 32: translateTo = "kn"; identifyLanguage(); break; // Kannada
+                case 33: translateTo = "ko"; identifyLanguage(); break; // Korean
+                case 34: translateTo = "lt"; identifyLanguage(); break; // Lithuanian
+                case 35: translateTo = "lv"; identifyLanguage(); break; // Latvian
+                case 36: translateTo = "mk"; identifyLanguage(); break; // Macedonian
+                case 37: translateTo = "mr"; identifyLanguage(); break; // Marathi
+                case 38: translateTo = "ms"; identifyLanguage(); break; // Malay
+                case 39: translateTo = "mt"; identifyLanguage(); break; // Maltese
+                case 40: translateTo = "nl"; identifyLanguage(); break; // Dutch
+                case 41: translateTo = "no"; identifyLanguage(); break; // Norwegian
+                case 42: translateTo = "pl"; identifyLanguage(); break; // Polish
+                case 43: translateTo = "pt"; identifyLanguage(); break; // Portuguese
+                case 44: translateTo = "ro"; identifyLanguage(); break; // Romanian
+                case 45: translateTo = "ru"; identifyLanguage(); break; // Russian
+                case 46: translateTo = "sk"; identifyLanguage(); break; // Slovakian
+                case 47: translateTo = "sl"; identifyLanguage(); break; // Slovenian
+                case 48: translateTo = "sq"; identifyLanguage(); break; // Albanian
+                case 49: translateTo = "sv"; identifyLanguage(); break; // Swedish
+                case 50: translateTo = "sw"; identifyLanguage(); break; // Swahili
+                case 51: translateTo = "ta"; identifyLanguage(); break; // Tamil
+                case 52: translateTo = "te"; identifyLanguage(); break; // Telugu
+                case 53: translateTo = "th"; identifyLanguage(); break; // Thai
+                case 54: translateTo = "tl"; identifyLanguage(); break; // Tagalog
+                case 55: translateTo = "tr"; identifyLanguage(); break; // Turkish
+                case 56: translateTo = "uk"; identifyLanguage(); break; // Ukrainian
+                case 57: translateTo = "ur"; identifyLanguage(); break; // Urdu
+                case 58: translateTo = "vi"; identifyLanguage(); break; // Vietnamese
+                case 60: translateTo = "zh"; identifyLanguage(); break; // Chinese
+            }
+            return true;
+        });
+    }
 }
