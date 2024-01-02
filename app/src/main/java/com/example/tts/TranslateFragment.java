@@ -4,9 +4,12 @@ import static android.content.ContentValues.TAG;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -15,18 +18,27 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.Toast;
 
 
@@ -49,6 +61,7 @@ import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+import java.lang.reflect.Field;
 import java.util.Locale;
 
 
@@ -57,7 +70,7 @@ import java.util.Locale;
  * Use the {@link TranslateFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class TranslateFragment extends Fragment {
+public class TranslateFragment extends Fragment  {
 
 
     // TODO: Rename parameter arguments, choose names that match
@@ -83,6 +96,8 @@ public class TranslateFragment extends Fragment {
 
     private Button openGalleryBtn;
     private Button getTextBtn;
+
+    private static final int REQUEST_INSTALL_PACKAGES = 100;
 
     private Translator englishSpanishTranslator;
 
@@ -141,6 +156,7 @@ public class TranslateFragment extends Fragment {
         howToUseBtn = v.findViewById(R.id.help);
         translateBtn = v.findViewById(R.id.translate);
 
+        requestInstallPermission();
 
         openGalleryBtn.setOnClickListener(view -> {
             pickImage();
@@ -156,7 +172,11 @@ public class TranslateFragment extends Fragment {
         });
 
         translateBtn.setOnClickListener(view -> {
-            showLocaleDialog();
+            if (hasInstallPermission()) {
+                showTranslateDialog();
+            } else {
+                Toast.makeText(getContext(), "Needs to be able to install packages", Toast.LENGTH_SHORT).show();
+            }
         });
 
         textRecognizerLatin = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
@@ -379,8 +399,9 @@ public class TranslateFragment extends Fragment {
                 });
     }
 
-    private void showLocaleDialog() {
-        PopupMenu popupMenu = new PopupMenu(getContext(), translateBtn);
+    private void showTranslateDialog() {
+        Context wrapper = new ContextThemeWrapper(getContext(), R.style.popupStyle);
+        PopupMenu popupMenu = new PopupMenu(wrapper, translateBtn, Gravity.CENTER_HORIZONTAL);
 
         popupMenu.getMenu().add(Menu.NONE, 1, 1, "Afrikaans");
         popupMenu.getMenu().add(Menu.NONE, 2, 2, "Arabic");
@@ -442,7 +463,9 @@ public class TranslateFragment extends Fragment {
         popupMenu.getMenu().add(Menu.NONE, 58, 58, "Vietnamese");
         popupMenu.getMenu().add(Menu.NONE, 59, 59, "Chinese");
 
+
         popupMenu.show();
+
 
         popupMenu.setOnMenuItemClickListener(menuItem -> {
             int id = menuItem.getItemId();
@@ -511,4 +534,26 @@ public class TranslateFragment extends Fragment {
             return true;
         });
     }
+
+    private boolean hasInstallPermission() {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.REQUEST_INSTALL_PACKAGES) == PackageManager.PERMISSION_DENIED;
+    }
+
+    // Method to request the permission
+    private void requestInstallPermission() {
+        requestPermissions(new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_INSTALL_PACKAGES);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_INSTALL_PACKAGES) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(getContext(), "Permission Granted to allow translation", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Able to translate", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 }

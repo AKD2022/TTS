@@ -16,8 +16,8 @@
         android:layout_width="326dp"
         android:layout_height="74dp"
         android:layout_gravity="top"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginLeft="35dp"
+        android:layout_marginTop="15dp"
         android:layout_marginRight="30dp"
         android:padding="15dp"
         android:text="Open Gallery"
@@ -26,8 +26,8 @@
 
     <ImageView
         android:id="@+id/showImageTranslate"
-        android:layout_width="match_parent"
-        android:layout_height="366dp"
+        android:layout_width="290dp"
+        android:layout_height="390dp"
         android:layout_gravity="center"
         android:layout_marginBottom="48dp"
         android:layout_marginLeft="8dp"
@@ -39,7 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="61dp"
         android:layout_gravity="bottom"
-        android:layout_marginLeft="200dp"
+        android:layout_marginLeft="215dp"
         android:layout_marginBottom="125dp"
         android:text="Translate"
         app:icon="@drawable/baseline_translate_24" />
@@ -49,7 +49,7 @@
         android:layout_width="161dp"
         android:layout_height="61dp"
         android:layout_gravity="bottom"
-        android:layout_marginLeft="30dp"
+        android:layout_marginLeft="45dp"
         android:layout_marginBottom="125dp"
         android:text="Recognize Text"
         app:icon="@drawable/baseline_document_scanner_24" />
@@ -58,7 +58,7 @@
         android:layout_width="305dp"
         android:layout_height="64dp"
         android:layout_gravity="bottom"
-        android:layout_marginLeft="30dp"
+        android:layout_marginLeft="45dp"
         android:layout_marginBottom="60dp"
         android:text="Generate Audio"
         app:icon="@drawable/baseline_audiotrack_24" />
