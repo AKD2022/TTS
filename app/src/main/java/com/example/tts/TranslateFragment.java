@@ -2,15 +2,19 @@ package com.example.tts;
 
 import static android.content.ContentValues.TAG;
 
+
+import static androidx.core.content.ContextCompat.checkSelfPermission;
+
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
+import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResult;
@@ -18,19 +22,19 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import android.provider.MediaStore;
+import android.os.Environment;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -38,7 +42,6 @@ import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.PopupMenu;
-import android.widget.PopupWindow;
 import android.widget.Toast;
 
 
@@ -61,7 +64,15 @@ import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions;
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 
 
@@ -92,19 +103,25 @@ public class TranslateFragment extends Fragment  {
     private String languageCode;
     private String translateTo;
 
+    private TextToSpeech speech;
     private String translatedText;
 
     private Button openGalleryBtn;
     private Button getTextBtn;
 
+    private Button generateAudioBtn;
+
     private static final int REQUEST_INSTALL_PACKAGES = 100;
 
-    private Translator englishSpanishTranslator;
+    private Locale selectedLocale;
+    private String mAudioFilename = "";
+    private final String mUtteranceID = "TextToSpeechAudio";
 
     private Button translateBtn;
     private ImageView showImageTranslateBtn;
     private FloatingActionButton howToUseBtn;
 
+    private static final int WRITE_EXTERNAL_STORAGE_CODE = 100;
 
     private Uri imageUri = null;
 
@@ -155,8 +172,9 @@ public class TranslateFragment extends Fragment  {
         showImageTranslateBtn = v.findViewById(R.id.showImageTranslate);
         howToUseBtn = v.findViewById(R.id.help);
         translateBtn = v.findViewById(R.id.translate);
+        generateAudioBtn = v.findViewById(R.id.generateAudio);
 
-        requestInstallPermission();
+
 
         openGalleryBtn.setOnClickListener(view -> {
             pickImage();
@@ -172,12 +190,16 @@ public class TranslateFragment extends Fragment  {
         });
 
         translateBtn.setOnClickListener(view -> {
-            if (hasInstallPermission()) {
-                showTranslateDialog();
-            } else {
-                Toast.makeText(getContext(), "Needs to be able to install packages", Toast.LENGTH_SHORT).show();
-            }
+             showTranslateDialog();
         });
+
+
+        generateAudioBtn.setOnClickListener(view -> {
+            initializeTextToSpeech(selectedLocale);
+            createFile();
+        });
+
+
 
         textRecognizerLatin = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
         textRecognizerChinese = TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
@@ -369,6 +391,7 @@ public class TranslateFragment extends Fragment  {
         Task<String> result = translator.translate(sourceText)
                 .addOnSuccessListener(s -> {
                     Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                    translatedText = s;
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "If the model is already installed, text cannot be translated", Toast.LENGTH_SHORT).show();
@@ -401,7 +424,8 @@ public class TranslateFragment extends Fragment  {
 
     private void showTranslateDialog() {
         Context wrapper = new ContextThemeWrapper(getContext(), R.style.popupStyle);
-        PopupMenu popupMenu = new PopupMenu(wrapper, translateBtn, Gravity.CENTER_HORIZONTAL);
+        PopupMenu popupMenu = new PopupMenu(wrapper, translateBtn);
+
 
         popupMenu.getMenu().add(Menu.NONE, 1, 1, "Afrikaans");
         popupMenu.getMenu().add(Menu.NONE, 2, 2, "Arabic");
@@ -471,89 +495,129 @@ public class TranslateFragment extends Fragment  {
             int id = menuItem.getItemId();
 
             switch (id) {
-                case 1: translateTo = "af"; identifyLanguage(); break; // Afrikaans
-                case 2: translateTo = "ar"; identifyLanguage(); break; // Arabic
-                case 3: translateTo = "be"; identifyLanguage(); break; // Belarusian
-                case 4: translateTo = "bg"; identifyLanguage(); break; // Bulgarian
-                case 5: translateTo = "bn"; identifyLanguage(); break; // Bengali
-                case 6: translateTo = "ca"; identifyLanguage(); break; // Catalan
-                case 7: translateTo = "cs"; identifyLanguage(); break; // Czech
-                case 8: translateTo = "cy"; identifyLanguage(); break; // Welsh
-                case 9: translateTo = "da"; identifyLanguage(); break; // Danish
-                case 10: translateTo = "de"; identifyLanguage(); break; // German
-                case 11: translateTo = "el"; identifyLanguage(); break; // Greek
-                case 12: translateTo = "en"; identifyLanguage(); break; // English
-                case 13: translateTo = "eo"; identifyLanguage(); break; // Esperanto
-                case 14: translateTo = "es"; identifyLanguage(); break; // Spanish
-                case 15: translateTo = "et"; identifyLanguage(); break; // Estonian
-                case 16: translateTo = "fa"; identifyLanguage(); break; // Persian
-                case 17: translateTo = "fi"; identifyLanguage(); break; // Finnish
-                case 18: translateTo = "fr"; identifyLanguage(); break; // French
-                case 19: translateTo = "ga"; identifyLanguage(); break; // Irish
-                case 20: translateTo = "gl"; identifyLanguage(); break; // Galician
-                case 21: translateTo = "gu"; identifyLanguage(); break; // Gujarati
-                case 22: translateTo = "he"; identifyLanguage(); break; // Hebrew
-                case 23: translateTo = "hi"; identifyLanguage(); break; // Hindi
-                case 24: translateTo = "hr"; identifyLanguage(); break; // Croatian
-                case 25: translateTo = "ht"; identifyLanguage(); break; // Haitian
-                case 26: translateTo = "hu"; identifyLanguage(); break; // Hungarian
-                case 27: translateTo = "id"; identifyLanguage(); break; // Indonesian
-                case 28: translateTo = "is"; identifyLanguage(); break; // Icelandic
-                case 29: translateTo = "it"; identifyLanguage(); break; // Italian
-                case 30: translateTo = "ja"; identifyLanguage(); break; // Japanese
-                case 31: translateTo = "ka"; identifyLanguage(); break; // Georgian
-                case 32: translateTo = "kn"; identifyLanguage(); break; // Kannada
-                case 33: translateTo = "ko"; identifyLanguage(); break; // Korean
-                case 34: translateTo = "lt"; identifyLanguage(); break; // Lithuanian
-                case 35: translateTo = "lv"; identifyLanguage(); break; // Latvian
-                case 36: translateTo = "mk"; identifyLanguage(); break; // Macedonian
-                case 37: translateTo = "mr"; identifyLanguage(); break; // Marathi
-                case 38: translateTo = "ms"; identifyLanguage(); break; // Malay
-                case 39: translateTo = "mt"; identifyLanguage(); break; // Maltese
-                case 40: translateTo = "nl"; identifyLanguage(); break; // Dutch
-                case 41: translateTo = "no"; identifyLanguage(); break; // Norwegian
-                case 42: translateTo = "pl"; identifyLanguage(); break; // Polish
-                case 43: translateTo = "pt"; identifyLanguage(); break; // Portuguese
-                case 44: translateTo = "ro"; identifyLanguage(); break; // Romanian
-                case 45: translateTo = "ru"; identifyLanguage(); break; // Russian
-                case 46: translateTo = "sk"; identifyLanguage(); break; // Slovakian
-                case 47: translateTo = "sl"; identifyLanguage(); break; // Slovenian
-                case 48: translateTo = "sq"; identifyLanguage(); break; // Albanian
-                case 49: translateTo = "sv"; identifyLanguage(); break; // Swedish
-                case 50: translateTo = "sw"; identifyLanguage(); break; // Swahili
-                case 51: translateTo = "ta"; identifyLanguage(); break; // Tamil
-                case 52: translateTo = "te"; identifyLanguage(); break; // Telugu
-                case 53: translateTo = "th"; identifyLanguage(); break; // Thai
-                case 54: translateTo = "tl"; identifyLanguage(); break; // Tagalog
-                case 55: translateTo = "tr"; identifyLanguage(); break; // Turkish
-                case 56: translateTo = "uk"; identifyLanguage(); break; // Ukrainian
-                case 57: translateTo = "ur"; identifyLanguage(); break; // Urdu
-                case 58: translateTo = "vi"; identifyLanguage(); break; // Vietnamese
-                case 60: translateTo = "zh"; identifyLanguage(); break; // Chinese
+                /*NA*/case 1: translateTo = "af"; selectedLocale = new Locale("af"); identifyLanguage(); break; // Afrikaans
+                case 2: translateTo = "ar"; selectedLocale = new Locale("ar"); identifyLanguage(); break; // Arabic
+                /*NA*/case 3: translateTo = "be"; selectedLocale = new Locale("be"); identifyLanguage(); break; // Belarusian
+                case 4: translateTo = "bg"; selectedLocale = new Locale("bg"); identifyLanguage(); break; // Bulgarian
+                case 5: translateTo = "bn"; selectedLocale = new Locale("bn"); identifyLanguage(); break; // Bengali
+                case 6: translateTo = "ca"; selectedLocale = new Locale("ca"); identifyLanguage(); break; // Catalan
+                case 7: translateTo = "cs"; selectedLocale = new Locale("cs"); identifyLanguage(); break; // Czech
+                case 8: translateTo = "cy"; selectedLocale = new Locale("cy"); identifyLanguage(); break; // Welsh
+                case 9: translateTo = "da"; selectedLocale = new Locale("da"); identifyLanguage(); break; // Danish
+                case 10: translateTo = "de"; selectedLocale = new Locale("de"); identifyLanguage(); break; // German
+                case 11: translateTo = "el"; selectedLocale = new Locale("el"); identifyLanguage(); break; // Greek
+                case 12: translateTo = "en"; selectedLocale = new Locale("en"); identifyLanguage(); break; // English
+                /*NA*/case 13: translateTo = "eo"; selectedLocale = new Locale("eo"); identifyLanguage(); break; // Esperanto
+                case 14: translateTo = "es"; selectedLocale = new Locale("es"); identifyLanguage(); break; // Spanish
+                case 15: translateTo = "et"; selectedLocale = new Locale("et"); identifyLanguage(); break; // Estonian
+                /*NA*/case 16: translateTo = "fa"; selectedLocale = new Locale("fa"); identifyLanguage(); break; // Persian
+                case 17: translateTo = "fi"; selectedLocale = new Locale("fi"); identifyLanguage(); break; // Finnish
+                case 18: translateTo = "fr"; selectedLocale = new Locale("fr"); identifyLanguage(); break; // French
+                /*NA*/case 19: translateTo = "ga"; selectedLocale = new Locale("ga"); identifyLanguage(); break; // Irish
+                /*NA*/case 20: translateTo = "gl"; selectedLocale = new Locale("gl"); identifyLanguage(); break; // Galician
+                case 21: translateTo = "gu"; selectedLocale = new Locale("gu"); identifyLanguage(); break; // Gujarati
+                case 22: translateTo = "he"; selectedLocale = new Locale("he"); identifyLanguage(); break; // Hebrew
+                case 23: translateTo = "hi"; selectedLocale = new Locale("hi"); identifyLanguage(); break; // Hindi
+                case 24: translateTo = "hr"; selectedLocale = new Locale("hr"); identifyLanguage(); break; // Croatian
+                /*NA*/case 25: translateTo = "ht"; selectedLocale = new Locale("ht"); identifyLanguage(); break; // Haitian
+                case 26: translateTo = "hu"; selectedLocale = new Locale("hu"); identifyLanguage(); break; // Hungarian
+                case 27: translateTo = "id"; selectedLocale = new Locale("id"); identifyLanguage(); break; // Indonesian
+                case 28: translateTo = "is"; selectedLocale = new Locale("is"); identifyLanguage(); break; // Icelandic
+                case 29: translateTo = "it"; selectedLocale = new Locale("it"); identifyLanguage(); break; // Italian
+                case 30: translateTo = "ja"; selectedLocale = new Locale("ja"); identifyLanguage(); break; // Japanese
+                /*NA*/case 31: translateTo = "ka"; selectedLocale = new Locale("ka"); identifyLanguage(); break; // Georgian
+                case 32: translateTo = "kn"; selectedLocale = new Locale("kn"); identifyLanguage(); break; // Kannada
+                case 33: translateTo = "ko"; selectedLocale = new Locale("ko"); identifyLanguage(); break; // Korean
+                case 34: translateTo = "lt"; selectedLocale = new Locale("lt"); identifyLanguage(); break; // Lithuanian
+                case 35: translateTo = "lv"; selectedLocale = new Locale("lv"); identifyLanguage(); break; // Latvian
+                /*NA*/case 36: translateTo = "mk"; selectedLocale = new Locale("mk"); identifyLanguage(); break; // Macedonian
+                case 37: translateTo = "mr"; selectedLocale = new Locale("mr"); identifyLanguage(); break; // Marathi
+                case 38: translateTo = "ms"; selectedLocale = new Locale("ms"); identifyLanguage(); break; // Malay
+                /*NA*/case 39: translateTo = "mt"; selectedLocale = new Locale("mt"); identifyLanguage(); break; // Maltese
+                case 40: translateTo = "nl"; selectedLocale = new Locale("nl"); identifyLanguage(); break; // Dutch
+                case 41: translateTo = "no"; selectedLocale = new Locale("no"); identifyLanguage(); break; // Norwegian
+                case 42: translateTo = "pl"; selectedLocale = new Locale("pl"); identifyLanguage(); break; // Polish
+                case 43: translateTo = "pt"; selectedLocale = new Locale("pt"); identifyLanguage(); break; // Portuguese
+                case 44: translateTo = "ro"; selectedLocale = new Locale("ro"); identifyLanguage(); break; // Romanian
+                case 45: translateTo = "ru"; selectedLocale = new Locale("ru"); identifyLanguage(); break; // Russian
+                case 46: translateTo = "sk"; selectedLocale = new Locale("sk"); identifyLanguage(); break; // Slovakian
+                /*NA*/case 47: translateTo = "sl"; selectedLocale = new Locale("sl"); identifyLanguage(); break; // Slovenian
+                case 48: translateTo = "sq"; selectedLocale = new Locale("sq"); identifyLanguage(); break; // Albanian
+                case 49: translateTo = "sv"; selectedLocale = new Locale("sv"); identifyLanguage(); break; // Swedish
+                case 50: translateTo = "sw"; selectedLocale = new Locale("sw"); identifyLanguage(); break; // Swahili
+                case 51: translateTo = "ta"; selectedLocale = new Locale("ta"); identifyLanguage(); break; // Tamil
+                case 52: translateTo = "te"; selectedLocale = new Locale("te"); identifyLanguage(); break; // Telugu
+                case 53: translateTo = "th"; selectedLocale = new Locale("th"); identifyLanguage(); break; // Thai
+                case 54: translateTo = "tl"; selectedLocale = new Locale("tl"); identifyLanguage(); break; // Tagalog
+                case 55: translateTo = "tr"; selectedLocale = new Locale("tr"); identifyLanguage(); break; // Turkish
+                case 56: translateTo = "uk"; selectedLocale = new Locale("uk"); identifyLanguage(); break; // Ukrainian
+                case 57: translateTo = "ur"; selectedLocale = new Locale("ur"); identifyLanguage(); break; // Urdu
+                case 58: translateTo = "vi"; selectedLocale = new Locale("vi"); identifyLanguage(); break; // Vietnamese
+                case 59: translateTo = "zh"; selectedLocale = new Locale("zh"); identifyLanguage(); break; // Chinese
+
             }
+            Configuration config = getResources().getConfiguration();
+            config.setLocale(selectedLocale);
+            getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+
             return true;
+
         });
     }
 
-    private boolean hasInstallPermission() {
-        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.REQUEST_INSTALL_PACKAGES) == PackageManager.PERMISSION_DENIED;
-    }
 
-    // Method to request the permission
-    private void requestInstallPermission() {
-        requestPermissions(new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, REQUEST_INSTALL_PACKAGES);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_INSTALL_PACKAGES) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(getContext(), "Permission Granted to allow translation", Toast.LENGTH_SHORT).show();
+    private void initializeTextToSpeech(Locale selectedLocale) {
+        speech = new TextToSpeech(getContext(), status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int result = speech.setLanguage(selectedLocale);
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e(TAG, "Language not supported");
+                    // Handle the case where the language is not supported
+                } else {
+                    Log.i(TAG, "Text-to-Speech initialized");
+                    // Now that TextToSpeech is initialized and language is set, let's synthesize text to an audio file
+                    String textToSpeak = translatedText;
+                    saveAudioToFile(textToSpeak);
+                }
             } else {
-                Toast.makeText(getContext(), "Able to translate", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Text-to-Speech initialization failed");
+                // Handle Text-to-Speech initialization failure
+            }
+        });
+    }
+
+    private void createFile() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
+
+            File sddir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "ttsAudio");
+            if (!sddir.exists()) {
+                boolean isDirectoryCreated = sddir.mkdirs();
+                if (!isDirectoryCreated) {
+                    Toast.makeText(getContext(), "Can't create directory to save the Audio", Toast.LENGTH_SHORT).show();
+                }
+                sddir.mkdirs();
+
+                mAudioFilename = sddir.getAbsolutePath() + "/" + mUtteranceID + System.currentTimeMillis() + ".wav";
             }
         }
     }
+
+    private void saveAudioToFile(String textToSpeak) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            speech.synthesizeToFile(textToSpeak, null, new File(mAudioFilename), mUtteranceID);
+            Toast.makeText(getContext(), "Saved to " + mAudioFilename, Toast.LENGTH_SHORT).show();
+        } else {
+            HashMap<String, String> hm = new HashMap();
+            hm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, mUtteranceID);
+            speech.synthesizeToFile(textToSpeak, hm, mAudioFilename);
+            Toast.makeText(getContext(), "Saved to " + mAudioFilename, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+
 
 }

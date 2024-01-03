@@ -55,6 +55,7 @@
         app:icon="@drawable/baseline_document_scanner_24" />
 
     <Button
+        android:id="@+id/generateAudio"
         android:layout_width="305dp"
         android:layout_height="64dp"
         android:layout_gravity="bottom"
