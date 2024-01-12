@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -103,6 +104,8 @@ public class TranslateFragment extends Fragment  {
     private String languageCode;
     private String translateTo;
 
+    public File folder;
+
     private TextToSpeech speech;
     private String translatedText;
 
@@ -112,6 +115,9 @@ public class TranslateFragment extends Fragment  {
     private Button generateAudioBtn;
 
     private static final int REQUEST_INSTALL_PACKAGES = 100;
+
+    private String languageTranslateTo;
+    private String languageTranslateFrom;
 
     private Locale selectedLocale;
     private String mAudioFilename = "";
@@ -190,7 +196,7 @@ public class TranslateFragment extends Fragment  {
         });
 
         translateBtn.setOnClickListener(view -> {
-             showTranslateDialog();
+            showTranslateDialog();
         });
 
 
@@ -304,7 +310,7 @@ public class TranslateFragment extends Fragment  {
                                                                                                         }
                                                                                                     });
 
-                                                                                        // EXCEPTION DEVANAGARI (ALL)
+                                                                                            // EXCEPTION DEVANAGARI (ALL)
                                                                                         } catch (Exception exceptionDevanagari) {
                                                                                             Toast.makeText(getContext(), "Could not get text from image", Toast.LENGTH_SHORT).show();
                                                                                         }
@@ -328,7 +334,7 @@ public class TranslateFragment extends Fragment  {
                                                                     Toast.makeText(getContext(), recognizedText, Toast.LENGTH_SHORT).show();
                                                                 }
                                                             });
-                                                // EXCEPTION JAPANESE
+                                                    // EXCEPTION JAPANESE
                                                 } catch (Exception exceptionJapanese) {
                                                     Toast.makeText(getContext(), "Could not get text from image", Toast.LENGTH_SHORT).show();
                                                 }
@@ -340,12 +346,12 @@ public class TranslateFragment extends Fragment  {
                                                 Toast.makeText(getContext(), recognizedText, Toast.LENGTH_SHORT).show();
                                             }
                                         });
-                            // EXCEPTION CHINESE
+                                // EXCEPTION CHINESE
                             } catch (Exception exceptionChinese) {
                                 Toast.makeText(getContext(), "Could not get text from image", Toast.LENGTH_SHORT).show();
                             }
 
-                        // LATIN WORKS
+                            // LATIN WORKS
                         } else {
                             Toast.makeText(getContext(), recognizedText, Toast.LENGTH_SHORT).show();
                         }
@@ -426,10 +432,7 @@ public class TranslateFragment extends Fragment  {
         Context wrapper = new ContextThemeWrapper(getContext(), R.style.popupStyle);
         PopupMenu popupMenu = new PopupMenu(wrapper, translateBtn);
 
-
-        popupMenu.getMenu().add(Menu.NONE, 1, 1, "Afrikaans");
         popupMenu.getMenu().add(Menu.NONE, 2, 2, "Arabic");
-        popupMenu.getMenu().add(Menu.NONE, 3, 3, "Belarusian");
         popupMenu.getMenu().add(Menu.NONE, 4, 4, "Bulgarian");
         popupMenu.getMenu().add(Menu.NONE, 5, 5, "Bengali");
         popupMenu.getMenu().add(Menu.NONE, 6, 6, "Catalan");
@@ -439,33 +442,25 @@ public class TranslateFragment extends Fragment  {
         popupMenu.getMenu().add(Menu.NONE, 10, 10, "German");
         popupMenu.getMenu().add(Menu.NONE, 11, 11, "Greek");
         popupMenu.getMenu().add(Menu.NONE, 12, 12, "English");
-        popupMenu.getMenu().add(Menu.NONE, 13, 13, "Esperanto");
         popupMenu.getMenu().add(Menu.NONE, 14, 14, "Spanish");
         popupMenu.getMenu().add(Menu.NONE, 15, 15, "Estonian");
-        popupMenu.getMenu().add(Menu.NONE, 16, 16, "Persian");
         popupMenu.getMenu().add(Menu.NONE, 17, 17, "Finnish");
         popupMenu.getMenu().add(Menu.NONE, 18, 18, "French");
-        popupMenu.getMenu().add(Menu.NONE, 19, 19, "Irish");
-        popupMenu.getMenu().add(Menu.NONE, 20, 20, "Galician");
         popupMenu.getMenu().add(Menu.NONE, 21, 21, "Gujarati");
         popupMenu.getMenu().add(Menu.NONE, 22, 22, "Hebrew");
         popupMenu.getMenu().add(Menu.NONE, 23, 23, "Hindi");
         popupMenu.getMenu().add(Menu.NONE, 24, 24, "Croatian");
-        popupMenu.getMenu().add(Menu.NONE, 25, 25, "Haitian");
         popupMenu.getMenu().add(Menu.NONE, 26, 26, "Hungarian");
         popupMenu.getMenu().add(Menu.NONE, 27, 27, "Indonesian");
         popupMenu.getMenu().add(Menu.NONE, 28, 28, "Icelandic");
         popupMenu.getMenu().add(Menu.NONE, 29, 29, "Italian");
         popupMenu.getMenu().add(Menu.NONE, 30, 30, "Japanese");
-        popupMenu.getMenu().add(Menu.NONE, 31, 31, "Georgian");
         popupMenu.getMenu().add(Menu.NONE, 32, 32, "Kannada");
         popupMenu.getMenu().add(Menu.NONE, 33, 33, "Korean");
         popupMenu.getMenu().add(Menu.NONE, 34, 34, "Lithuanian");
         popupMenu.getMenu().add(Menu.NONE, 35, 35, "Latvian");
-        popupMenu.getMenu().add(Menu.NONE, 36, 36, "Macedonian");
         popupMenu.getMenu().add(Menu.NONE, 37, 37, "Marathi");
         popupMenu.getMenu().add(Menu.NONE, 38, 38, "Malay");
-        popupMenu.getMenu().add(Menu.NONE, 39, 39, "Maltese");
         popupMenu.getMenu().add(Menu.NONE, 40, 40, "Dutch");
         popupMenu.getMenu().add(Menu.NONE, 41, 41, "Norwegian");
         popupMenu.getMenu().add(Menu.NONE, 42, 42, "Polish");
@@ -473,7 +468,6 @@ public class TranslateFragment extends Fragment  {
         popupMenu.getMenu().add(Menu.NONE, 44, 44, "Romanian");
         popupMenu.getMenu().add(Menu.NONE, 45, 45, "Russian");
         popupMenu.getMenu().add(Menu.NONE, 46, 46, "Slovak");
-        popupMenu.getMenu().add(Menu.NONE, 47, 47, "Slovenian");
         popupMenu.getMenu().add(Menu.NONE, 48, 48, "Albanian");
         popupMenu.getMenu().add(Menu.NONE, 49, 49, "Swedish");
         popupMenu.getMenu().add(Menu.NONE, 50, 50, "Swahili");
@@ -495,9 +489,7 @@ public class TranslateFragment extends Fragment  {
             int id = menuItem.getItemId();
 
             switch (id) {
-                /*NA*/case 1: translateTo = "af"; selectedLocale = new Locale("af"); identifyLanguage(); break; // Afrikaans
                 case 2: translateTo = "ar"; selectedLocale = new Locale("ar"); identifyLanguage(); break; // Arabic
-                /*NA*/case 3: translateTo = "be"; selectedLocale = new Locale("be"); identifyLanguage(); break; // Belarusian
                 case 4: translateTo = "bg"; selectedLocale = new Locale("bg"); identifyLanguage(); break; // Bulgarian
                 case 5: translateTo = "bn"; selectedLocale = new Locale("bn"); identifyLanguage(); break; // Bengali
                 case 6: translateTo = "ca"; selectedLocale = new Locale("ca"); identifyLanguage(); break; // Catalan
@@ -507,33 +499,25 @@ public class TranslateFragment extends Fragment  {
                 case 10: translateTo = "de"; selectedLocale = new Locale("de"); identifyLanguage(); break; // German
                 case 11: translateTo = "el"; selectedLocale = new Locale("el"); identifyLanguage(); break; // Greek
                 case 12: translateTo = "en"; selectedLocale = new Locale("en"); identifyLanguage(); break; // English
-                /*NA*/case 13: translateTo = "eo"; selectedLocale = new Locale("eo"); identifyLanguage(); break; // Esperanto
                 case 14: translateTo = "es"; selectedLocale = new Locale("es"); identifyLanguage(); break; // Spanish
                 case 15: translateTo = "et"; selectedLocale = new Locale("et"); identifyLanguage(); break; // Estonian
-                /*NA*/case 16: translateTo = "fa"; selectedLocale = new Locale("fa"); identifyLanguage(); break; // Persian
                 case 17: translateTo = "fi"; selectedLocale = new Locale("fi"); identifyLanguage(); break; // Finnish
                 case 18: translateTo = "fr"; selectedLocale = new Locale("fr"); identifyLanguage(); break; // French
-                /*NA*/case 19: translateTo = "ga"; selectedLocale = new Locale("ga"); identifyLanguage(); break; // Irish
-                /*NA*/case 20: translateTo = "gl"; selectedLocale = new Locale("gl"); identifyLanguage(); break; // Galician
                 case 21: translateTo = "gu"; selectedLocale = new Locale("gu"); identifyLanguage(); break; // Gujarati
                 case 22: translateTo = "he"; selectedLocale = new Locale("he"); identifyLanguage(); break; // Hebrew
                 case 23: translateTo = "hi"; selectedLocale = new Locale("hi"); identifyLanguage(); break; // Hindi
                 case 24: translateTo = "hr"; selectedLocale = new Locale("hr"); identifyLanguage(); break; // Croatian
-                /*NA*/case 25: translateTo = "ht"; selectedLocale = new Locale("ht"); identifyLanguage(); break; // Haitian
                 case 26: translateTo = "hu"; selectedLocale = new Locale("hu"); identifyLanguage(); break; // Hungarian
                 case 27: translateTo = "id"; selectedLocale = new Locale("id"); identifyLanguage(); break; // Indonesian
                 case 28: translateTo = "is"; selectedLocale = new Locale("is"); identifyLanguage(); break; // Icelandic
                 case 29: translateTo = "it"; selectedLocale = new Locale("it"); identifyLanguage(); break; // Italian
                 case 30: translateTo = "ja"; selectedLocale = new Locale("ja"); identifyLanguage(); break; // Japanese
-                /*NA*/case 31: translateTo = "ka"; selectedLocale = new Locale("ka"); identifyLanguage(); break; // Georgian
                 case 32: translateTo = "kn"; selectedLocale = new Locale("kn"); identifyLanguage(); break; // Kannada
                 case 33: translateTo = "ko"; selectedLocale = new Locale("ko"); identifyLanguage(); break; // Korean
                 case 34: translateTo = "lt"; selectedLocale = new Locale("lt"); identifyLanguage(); break; // Lithuanian
                 case 35: translateTo = "lv"; selectedLocale = new Locale("lv"); identifyLanguage(); break; // Latvian
-                /*NA*/case 36: translateTo = "mk"; selectedLocale = new Locale("mk"); identifyLanguage(); break; // Macedonian
                 case 37: translateTo = "mr"; selectedLocale = new Locale("mr"); identifyLanguage(); break; // Marathi
                 case 38: translateTo = "ms"; selectedLocale = new Locale("ms"); identifyLanguage(); break; // Malay
-                /*NA*/case 39: translateTo = "mt"; selectedLocale = new Locale("mt"); identifyLanguage(); break; // Maltese
                 case 40: translateTo = "nl"; selectedLocale = new Locale("nl"); identifyLanguage(); break; // Dutch
                 case 41: translateTo = "no"; selectedLocale = new Locale("no"); identifyLanguage(); break; // Norwegian
                 case 42: translateTo = "pl"; selectedLocale = new Locale("pl"); identifyLanguage(); break; // Polish
@@ -541,7 +525,6 @@ public class TranslateFragment extends Fragment  {
                 case 44: translateTo = "ro"; selectedLocale = new Locale("ro"); identifyLanguage(); break; // Romanian
                 case 45: translateTo = "ru"; selectedLocale = new Locale("ru"); identifyLanguage(); break; // Russian
                 case 46: translateTo = "sk"; selectedLocale = new Locale("sk"); identifyLanguage(); break; // Slovakian
-                /*NA*/case 47: translateTo = "sl"; selectedLocale = new Locale("sl"); identifyLanguage(); break; // Slovenian
                 case 48: translateTo = "sq"; selectedLocale = new Locale("sq"); identifyLanguage(); break; // Albanian
                 case 49: translateTo = "sv"; selectedLocale = new Locale("sv"); identifyLanguage(); break; // Swedish
                 case 50: translateTo = "sw"; selectedLocale = new Locale("sw"); identifyLanguage(); break; // Swahili
@@ -572,7 +555,6 @@ public class TranslateFragment extends Fragment  {
                 int result = speech.setLanguage(selectedLocale);
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e(TAG, "Language not supported");
-                    // Handle the case where the language is not supported
                 } else {
                     Log.i(TAG, "Text-to-Speech initialized");
                     // Now that TextToSpeech is initialized and language is set, let's synthesize text to an audio file
@@ -586,34 +568,144 @@ public class TranslateFragment extends Fragment  {
         });
     }
 
+    public void languageName() {
+        switch(languageCode) {
+            case "ar": languageTranslateFrom = "Arabic"; break;
+            case "bg": languageTranslateFrom = "Bulgarian"; break;
+            case "bn": languageTranslateFrom = "Bengali"; break;
+            case "ca": languageTranslateFrom = "Catalan"; break;
+            case "cs": languageTranslateFrom = "Czech"; break;
+            case "cy": languageTranslateFrom = "Welsh"; break;
+            case "da": languageTranslateFrom = "Danish"; break;
+            case "de": languageTranslateFrom = "German"; break;
+            case "el": languageTranslateFrom = "Greek"; break;
+            case "en": languageTranslateFrom = "English"; break;
+            case "es": languageTranslateFrom = "Spanish"; break;
+            case "et": languageTranslateFrom = "Estonian"; break;
+            case "fi": languageTranslateFrom = "Finnish"; break;
+            case "fr": languageTranslateFrom = "French"; break;
+            case "gu": languageTranslateFrom = "Gujarati"; break;
+            case "he": languageTranslateFrom = "Hebrew"; break;
+            case "hi": languageTranslateFrom = "Hindi"; break;
+            case "hr": languageTranslateFrom = "Croatian"; break;
+            case "hu": languageTranslateFrom = "Hungarian"; break;
+            case "id": languageTranslateFrom = "Indonesian"; break;
+            case "is": languageTranslateFrom = "Icelandic"; break;
+            case "it": languageTranslateFrom = "Italian"; break;
+            case "ja": languageTranslateFrom = "Japanese"; break;
+            case "kn": languageTranslateFrom = "Kannada"; break;
+            case "ko": languageTranslateFrom = "Korean"; break;
+            case "lt": languageTranslateFrom = "Lithuanian"; break;
+            case "mr": languageTranslateFrom = "Latvian"; break;
+            case "ms": languageTranslateFrom = "Marathi"; break;
+            case "nl": languageTranslateFrom = "Malay"; break;
+            case "no": languageTranslateFrom = "Dutch"; break;
+            case "pl": languageTranslateFrom = "Norwegian"; break;
+            case "pt": languageTranslateFrom = "Polish"; break;
+            case "ro": languageTranslateFrom = "Portuguese"; break;
+            case "ru": languageTranslateFrom = "Romanian"; break;
+            case "sk": languageTranslateFrom = "Russian"; break;
+            case "sq": languageTranslateFrom = "Slovakian"; break;
+            case "sv": languageTranslateFrom = "Albanian"; break;
+            case "sw": languageTranslateFrom = "Swedish"; break;
+            case "ta": languageTranslateFrom = "Swahili"; break;
+            case "te": languageTranslateFrom = "Tamil"; break;
+            case "th": languageTranslateFrom = "Telugu"; break;
+            case "tl": languageTranslateFrom = "Thai"; break;
+            case "tr": languageTranslateFrom = "Tagalog"; break;
+            case "uk": languageTranslateFrom = "Turkish"; break;
+            case "ur": languageTranslateFrom = "Ukrainian"; break;
+            case "vi": languageTranslateFrom = "Urdu"; break;
+            case "zh": languageTranslateFrom = "Vietnamese"; break;
+        }
+
+        switch(translateTo) {
+            case "ar": languageTranslateTo = "Arabic"; break;
+            case "bg": languageTranslateTo = "Bulgarian"; break;
+            case "bn": languageTranslateTo = "Bengali"; break;
+            case "ca": languageTranslateTo = "Catalan"; break;
+            case "cs": languageTranslateTo = "Czech"; break;
+            case "cy": languageTranslateTo = "Welsh"; break;
+            case "da": languageTranslateTo = "Danish"; break;
+            case "de": languageTranslateTo = "German"; break;
+            case "el": languageTranslateTo = "Greek"; break;
+            case "en": languageTranslateTo = "English"; break;
+            case "es": languageTranslateTo = "Spanish"; break;
+            case "et": languageTranslateTo = "Estonian"; break;
+            case "fi": languageTranslateTo = "Finnish"; break;
+            case "fr": languageTranslateTo = "French"; break;
+            case "gu": languageTranslateTo = "Gujarati"; break;
+            case "he": languageTranslateTo = "Hebrew"; break;
+            case "hi": languageTranslateTo = "Hindi"; break;
+            case "hr": languageTranslateTo = "Croatian"; break;
+            case "hu": languageTranslateTo = "Hungarian"; break;
+            case "id": languageTranslateTo = "Indonesian"; break;
+            case "is": languageTranslateTo = "Icelandic"; break;
+            case "it": languageTranslateTo = "Italian"; break;
+            case "ja": languageTranslateTo = "Japanese"; break;
+            case "kn": languageTranslateTo = "Kannada"; break;
+            case "ko": languageTranslateTo = "Korean"; break;
+            case "lt": languageTranslateTo = "Lithuanian"; break;
+            case "mr": languageTranslateTo = "Latvian"; break;
+            case "ms": languageTranslateTo = "Marathi"; break;
+            case "nl": languageTranslateTo = "Malay"; break;
+            case "no": languageTranslateTo = "Dutch"; break;
+            case "pl": languageTranslateTo = "Norwegian"; break;
+            case "pt": languageTranslateTo = "Polish"; break;
+            case "ro": languageTranslateTo = "Portuguese"; break;
+            case "ru": languageTranslateTo = "Romanian"; break;
+            case "sk": languageTranslateTo = "Russian"; break;
+            case "sq": languageTranslateTo = "Slovakian"; break;
+            case "sv": languageTranslateTo = "Albanian"; break;
+            case "sw": languageTranslateTo = "Swedish"; break;
+            case "ta": languageTranslateTo = "Swahili"; break;
+            case "te": languageTranslateTo = "Tamil"; break;
+            case "th": languageTranslateTo = "Telugu"; break;
+            case "tl": languageTranslateTo = "Thai"; break;
+            case "tr": languageTranslateTo = "Tagalog"; break;
+            case "uk": languageTranslateTo = "Turkish"; break;
+            case "ur": languageTranslateTo = "Ukrainian"; break;
+            case "vi": languageTranslateTo = "Urdu"; break;
+            case "zh": languageTranslateTo = "Vietnamese"; break;
+
+        }
+    }
+
     private void createFile() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-            }
-
-            File sddir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "ttsAudio");
-            if (!sddir.exists()) {
-                boolean isDirectoryCreated = sddir.mkdirs();
-                if (!isDirectoryCreated) {
-                    Toast.makeText(getContext(), "Can't create directory to save the Audio", Toast.LENGTH_SHORT).show();
-                }
-                sddir.mkdirs();
-
-                mAudioFilename = sddir.getAbsolutePath() + "/" + mUtteranceID + System.currentTimeMillis() + ".wav";
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_CODE);
             }
         }
+
+        folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Text To Speech Audio");
+        if (!folder.exists()) {
+            boolean isDirectoryCreated = folder.mkdirs();
+            if (!isDirectoryCreated)
+                Toast.makeText(getContext(), "Can't create directory to save the Audio", Toast.LENGTH_SHORT).show();
+        }
+        folder.mkdirs();
+        languageName();
+
+        mAudioFilename = folder.getAbsolutePath() + "as \n"  + languageTranslateFrom + "-" + languageTranslateTo + "-" + mUtteranceID + System.currentTimeMillis() + ".wav";
+
     }
 
     private void saveAudioToFile(String textToSpeak) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             speech.synthesizeToFile(textToSpeak, null, new File(mAudioFilename), mUtteranceID);
-            Toast.makeText(getContext(), "Saved to " + mAudioFilename, Toast.LENGTH_SHORT).show();
+            new MaterialAlertDialogBuilder(getContext())
+                    .setMessage("Saved to: " + mAudioFilename)
+                    .setPositiveButton("OK", null)
+                    .show();
         } else {
             HashMap<String, String> hm = new HashMap();
             hm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, mUtteranceID);
             speech.synthesizeToFile(textToSpeak, hm, mAudioFilename);
-            Toast.makeText(getContext(), "Saved to " + mAudioFilename, Toast.LENGTH_SHORT).show();
+            new MaterialAlertDialogBuilder(getContext())
+                    .setMessage("Saved to: " + mAudioFilename)
+                    .setPositiveButton("OK", null)
+                    .show();
         }
     }
 

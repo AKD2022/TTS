@@ -152,7 +152,7 @@ public class CameraFragment extends Fragment {
         String directoryName = "TTS Images";
         String filename = "imagefortranslation" + 1;
 
-        File directory = new File(requireContext().getExternalFilesDir(Environment.MEDIA_SHARED), directoryName);
+        File directory = new File (Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), directoryName);
 
         if (!directory.exists()) {
             directory.mkdirs();

@@ -1,17 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/pink"
-    tools:context=".AudioFragment">
+    android:background="@color/pink">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <ListView
+        android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textSize="26dp"
-        android:gravity="center"
-        android:text="Audio Fragment" />
+        android:layout_above="@+id/buttonsLayout"
+        android:layout_marginBottom="16dp" />
 
-</FrameLayout>
+    <LinearLayout
+        android:id="@+id/buttonsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Start"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/btnPause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pause"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <ProgressBar
+            android:id="@+id/popupProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:max="100"
+            android:progress="0"/>
+    </RelativeLayout>
+
+</RelativeLayout>

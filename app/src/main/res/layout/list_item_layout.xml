@@ -1,0 +1,50 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textItem"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Audio File Name"
+        android:textSize="18sp"
+        android:padding="8dp"/>
+
+    <ProgressBar
+        android:id="@+id/progressBarListItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:id="@+id/elapsedTimeLayout"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/textElapsed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="00:00"
+            android:textSize="14sp"
+            android:padding="4dp" />
+
+        <TextView
+            android:id="@+id/textRemaining"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/ 00:00"
+            android:textSize="14sp"
+            android:padding="4dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

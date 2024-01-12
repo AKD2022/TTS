@@ -1,66 +1,111 @@
 package com.example.tts;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link AudioFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.fragment.app.Fragment;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class AudioFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-
+    private ListView listView;
+    private MediaPlayer mediaPlayer;
+    private AudioListAdapter adapter;
 
     public AudioFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment AudioFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static AudioFragment newInstance(String param1, String param2) {
-        AudioFragment fragment = new AudioFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_audio, container, false);
+
+        View v = inflater.inflate(R.layout.fragment_audio, container, false);
+
+        listView = v.findViewById(R.id.listView);
+
+        List<String> audioFileNames = getAudioFileNames();
+        adapter = new AudioListAdapter(requireContext(), audioFileNames);
+        listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                adapter.setExpandedPosition(position);
+                String selectedAudioFileName = audioFileNames.get(position);
+                playAudio(selectedAudioFileName);
+            }
+        });
+
+
+        return v;
+    }
+
+
+    private void playAudio(String audioFileName) {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
+        mediaPlayer = new MediaPlayer();
+
+        try {
+            File audioFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Text To Speech Audio/" + audioFileName);
+            if (audioFile.exists()) {
+                mediaPlayer.setDataSource(audioFile.getAbsolutePath());
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+            } else {
+                Toast.makeText(requireContext(), "File not found", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException e) {
+            Toast.makeText(requireContext(), "Error playing audio", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
+
+    private List<String> getAudioFileNames() {
+        List<String> audioFileNames = new ArrayList<>();
+
+        File folder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Text To Speech Audio");
+
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.isFile() && pathname.getName().endsWith(".wav");
+                }
+            });
+
+            if (files != null) {
+                for (File file : files) {
+                    audioFileNames.add(file.getName());
+                }
+            }
+        }
+
+        return audioFileNames;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 }
