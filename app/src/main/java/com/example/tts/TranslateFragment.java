@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Camera;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -45,7 +46,6 @@ import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -74,6 +74,7 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -112,6 +113,7 @@ public class TranslateFragment extends Fragment  {
     private Button openGalleryBtn;
     private Button getTextBtn;
 
+
     private Button generateAudioBtn;
 
     private static final int REQUEST_INSTALL_PACKAGES = 100;
@@ -121,6 +123,7 @@ public class TranslateFragment extends Fragment  {
 
     private Locale selectedLocale;
     private String mAudioFilename = "";
+    private String fileNameForSaving = "";
     private final String mUtteranceID = "TextToSpeechAudio";
 
     private Button translateBtn;
@@ -383,12 +386,14 @@ public class TranslateFragment extends Fragment  {
         translator.downloadModelIfNeeded()
                 .addOnSuccessListener(unused -> {
                     progressDialog.dismiss();
-                    // Start translation only after model download completes
                     translateWithModelAvailable(translator, sourceText);
                 })
                 .addOnFailureListener(e -> {
                     progressDialog.dismiss();
-                    Toast.makeText(getContext(), "Failed to download translation model", Toast.LENGTH_SHORT).show();
+                    new MaterialAlertDialogBuilder(getContext())
+                            .setMessage("Translation Failed. May be a problem with installing the translation model")
+                            .setPositiveButton("OK", null)
+                            .show();
                     Log.e(TAG, "Translation model download failed: " + e.getMessage());
                 });
     }
@@ -557,13 +562,15 @@ public class TranslateFragment extends Fragment  {
                     Log.e(TAG, "Language not supported");
                 } else {
                     Log.i(TAG, "Text-to-Speech initialized");
-                    // Now that TextToSpeech is initialized and language is set, let's synthesize text to an audio file
                     String textToSpeak = translatedText;
                     saveAudioToFile(textToSpeak);
                 }
             } else {
                 Log.e(TAG, "Text-to-Speech initialization failed");
-                // Handle Text-to-Speech initialization failure
+                new MaterialAlertDialogBuilder(getContext())
+                        .setMessage("Cannot translate text-to-speech. Please try taking a clearer image or try again.")
+                        .setPositiveButton("OK", null)
+                        .show();
             }
         });
     }
@@ -687,15 +694,15 @@ public class TranslateFragment extends Fragment  {
         folder.mkdirs();
         languageName();
 
-        mAudioFilename = folder.getAbsolutePath() + "as \n"  + languageTranslateFrom + "-" + languageTranslateTo + "-" + mUtteranceID + System.currentTimeMillis() + ".wav";
-
+        mAudioFilename = folder.getAbsolutePath() + "/" + mUtteranceID + System.currentTimeMillis() + ".wav";
+        fileNameForSaving = "Internal Storage/Download/Text To Speech Audio as \n" + languageCode + "-" + translateTo + ".wav";
     }
 
     private void saveAudioToFile(String textToSpeak) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             speech.synthesizeToFile(textToSpeak, null, new File(mAudioFilename), mUtteranceID);
             new MaterialAlertDialogBuilder(getContext())
-                    .setMessage("Saved to: " + mAudioFilename)
+                    .setMessage("Saved to: " + fileNameForSaving)
                     .setPositiveButton("OK", null)
                     .show();
         } else {
