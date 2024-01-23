@@ -401,7 +401,10 @@ public class TranslateFragment extends Fragment  {
     private void translateWithModelAvailable(Translator translator, String sourceText) {
         Task<String> result = translator.translate(sourceText)
                 .addOnSuccessListener(s -> {
-                    Toast.makeText(getContext(), s, Toast.LENGTH_SHORT).show();
+                    new MaterialAlertDialogBuilder(getContext())
+                            .setMessage(s)
+                            .setPositiveButton("Ok", null)
+                            .show();
                     translatedText = s;
                 })
                 .addOnFailureListener(e -> {
@@ -542,8 +545,8 @@ public class TranslateFragment extends Fragment  {
                 case 57: translateTo = "ur"; selectedLocale = new Locale("ur"); identifyLanguage(); break; // Urdu
                 case 58: translateTo = "vi"; selectedLocale = new Locale("vi"); identifyLanguage(); break; // Vietnamese
                 case 59: translateTo = "zh"; selectedLocale = new Locale("zh"); identifyLanguage(); break; // Chinese
-
             }
+
             Configuration config = getResources().getConfiguration();
             config.setLocale(selectedLocale);
             getResources().updateConfiguration(config, getResources().getDisplayMetrics());
@@ -560,6 +563,10 @@ public class TranslateFragment extends Fragment  {
                 int result = speech.setLanguage(selectedLocale);
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e(TAG, "Language not supported");
+                    new MaterialAlertDialogBuilder(getContext())
+                            .setMessage("Language is not supported, language cannot be detected in the image. ")
+                            .setPositiveButton("OK", null)
+                            .show();
                 } else {
                     Log.i(TAG, "Text-to-Speech initialized");
                     String textToSpeak = translatedText;
@@ -695,7 +702,7 @@ public class TranslateFragment extends Fragment  {
         languageName();
 
         mAudioFilename = folder.getAbsolutePath() + "/" + mUtteranceID + System.currentTimeMillis() + ".wav";
-        fileNameForSaving = "Internal Storage/Download/Text To Speech Audio as \n" + languageCode + "-" + translateTo + ".wav";
+        fileNameForSaving = "Internal Storage/Download/Text To Speech Audio as:  \n" + languageCode + "-" + translateTo + ".wav";
     }
 
     private void saveAudioToFile(String textToSpeak) {
