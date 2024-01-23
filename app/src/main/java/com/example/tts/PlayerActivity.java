@@ -34,6 +34,7 @@ public class PlayerActivity extends AppCompatActivity {
         btnPlay = findViewById(R.id.playBtn);
         btnff = findViewById(R.id.btnFastForward);
         btnfb = findViewById(R.id.btnFastBackwards);
+        txtsname = findViewById(R.id.txtAudioName);
 
     }
 }
